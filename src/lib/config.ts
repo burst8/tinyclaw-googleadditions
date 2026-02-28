@@ -46,9 +46,6 @@ export function getSettings(): Settings {
             if (settings?.models?.openai) {
                 if (!settings.models) settings.models = {};
                 settings.models.provider = 'openai';
-            } else if (settings?.models?.['openai-cli']) {
-                if (!settings.models) settings.models = {};
-                settings.models.provider = 'openai-cli';
             } else if (settings?.models?.opencode) {
                 if (!settings.models) settings.models = {};
                 settings.models.provider = 'opencode';
@@ -82,8 +79,6 @@ export function getDefaultAgentFromModels(settings: Settings): AgentConfig {
     let model = '';
     if (provider === 'openai') {
         model = settings?.models?.openai?.model || 'gpt-5.3-codex';
-    } else if (provider === 'openai-cli') {
-        model = settings?.models?.['openai-cli']?.model || 'gpt-4o';
     } else if (provider === 'opencode') {
         model = settings?.models?.opencode?.model || 'sonnet';
     } else if (provider === 'gemini') {
@@ -142,13 +137,6 @@ export function resolveCodexModel(model: string): string {
 }
 
 /**
- * Resolve the model ID for OpenAI CLI (passthrough).
- */
-export function resolveOpenAICliModel(model: string): string {
-    return model || '';
-}
-
-/**
  * Resolve the model ID for OpenCode (passed via --model flag).
  * Falls back to the raw model string from settings if no mapping is found.
  */
@@ -190,7 +178,6 @@ export function getAuthEnv(provider: string): Record<string, string> {
     const ENV_MAP: Record<string, string> = {
         anthropic: 'ANTHROPIC_API_KEY',
         openai: 'OPENAI_API_KEY',
-        'openai-cli': 'OPENAI_API_KEY',
         opencode: 'ANTHROPIC_API_KEY',
         gemini: 'GOOGLE_API_KEY',
         kimi: 'MOONSHOT_API_KEY',

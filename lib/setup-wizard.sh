@@ -155,9 +155,8 @@ echo "  3) OpenCode"
 echo "  4) Gemini (Google)"
 echo "  5) Kimi"
 echo "  6) Antigravity"
-echo "  7) OpenAI CLI (Chat)"
 echo ""
-read -rp "Choose [1-7]: " PROVIDER_CHOICE
+read -rp "Choose [1-6]: " PROVIDER_CHOICE
 
 case "$PROVIDER_CHOICE" in
     1) PROVIDER="anthropic" ;;
@@ -166,7 +165,6 @@ case "$PROVIDER_CHOICE" in
     4) PROVIDER="gemini" ;;
     5) PROVIDER="kimi" ;;
     6) PROVIDER="antigravity" ;;
-    7) PROVIDER="openai-cli" ;;
     *)
         echo -e "${RED}Invalid choice${NC}"
         exit 1
@@ -270,18 +268,6 @@ elif [ "$PROVIDER" = "antigravity" ]; then
         echo -e "${GREEN}✓ Model: (CLI default)${NC}"
     fi
     echo ""
-elif [ "$PROVIDER" = "openai-cli" ]; then
-    echo "Which OpenAI model?"
-    echo -e "${YELLOW}(Leave blank for CLI default, typically gpt-4o)${NC}"
-    echo ""
-    read -rp "Model name [default: CLI default]: " MODEL_INPUT
-    MODEL=${MODEL_INPUT:-""}
-    if [ -n "$MODEL" ]; then
-        echo -e "${GREEN}✓ Model: $MODEL${NC}"
-    else
-        echo -e "${GREEN}✓ Model: (CLI default)${NC}"
-    fi
-    echo ""
 else
     # Codex / legacy OpenAI models
     echo "Which OpenAI model?"
@@ -358,11 +344,11 @@ echo -e "${GREEN}  CLI Authentication${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo "Select providers to sign into now (OAuth or API key):"
-echo "  1) Anthropic (Claude)    4) Gemini (Google)    7) OpenAI CLI"
-echo "  2) OpenAI                5) Kimi"
+echo "  1) Anthropic (Claude)    4) Gemini (Google)"
+echo "  2) OpenAI (Codex)        5) Kimi"
 echo "  3) OpenCode              6) Antigravity"
 echo ""
-echo -e "${YELLOW}Enter numbers separated by spaces (e.g. '1 4 7'), or 'none' to skip:${NC}"
+echo -e "${YELLOW}Enter numbers separated by spaces (e.g. '1 4 5'), or 'none' to skip:${NC}"
 read -rp "Sign in to: " SIGNIN_CHOICES
 
 if [ "$SIGNIN_CHOICES" != "none" ] && [ -n "$SIGNIN_CHOICES" ]; then
@@ -374,7 +360,6 @@ if [ "$SIGNIN_CHOICES" != "none" ] && [ -n "$SIGNIN_CHOICES" ]; then
             4) sign_in_provider "gemini" ;;
             5) sign_in_provider "kimi" ;;
             6) sign_in_provider "antigravity" ;;
-            7) sign_in_provider "openai-cli" ;;
             *) echo -e "  ${RED}Unknown option: $choice — skipping${NC}" ;;
         esac
     done
@@ -427,15 +412,14 @@ if [[ "$SETUP_AGENTS" =~ ^[yY] ]]; then
         read -rp "  Display name: " NEW_AGENT_NAME
         [ -z "$NEW_AGENT_NAME" ] && NEW_AGENT_NAME="$NEW_AGENT_ID"
 
-        echo "  Provider: 1) Anthropic  2) OpenAI  3) OpenCode  4) Gemini  5) Kimi  6) Antigravity 7) OpenAI CLI"
-        read -rp "  Choose [1-7, default: 1]: " NEW_PROVIDER_CHOICE
+        echo "  Provider: 1) Anthropic  2) OpenAI  3) OpenCode  4) Gemini  5) Kimi  6) Antigravity"
+        read -rp "  Choose [1-6, default: 1]: " NEW_PROVIDER_CHOICE
         case "$NEW_PROVIDER_CHOICE" in
             2) NEW_PROVIDER="openai" ;;
             3) NEW_PROVIDER="opencode" ;;
             4) NEW_PROVIDER="gemini" ;;
             5) NEW_PROVIDER="kimi" ;;
             6) NEW_PROVIDER="antigravity" ;;
-            7) NEW_PROVIDER="openai-cli" ;;
             *) NEW_PROVIDER="anthropic" ;;
         esac
 
@@ -466,10 +450,6 @@ if [[ "$SETUP_AGENTS" =~ ^[yY] ]]; then
             read -rp "  Model name: " NEW_MODEL_INPUT
             NEW_MODEL=${NEW_MODEL_INPUT:-""}
         elif [ "$NEW_PROVIDER" = "antigravity" ]; then
-            echo -e "  ${YELLOW}Enter a model name or leave blank for CLI default:${NC}"
-            read -rp "  Model name: " NEW_MODEL_INPUT
-            NEW_MODEL=${NEW_MODEL_INPUT:-""}
-        elif [ "$NEW_PROVIDER" = "openai-cli" ]; then
             echo -e "  ${YELLOW}Enter a model name or leave blank for CLI default:${NC}"
             read -rp "  Model name: " NEW_MODEL_INPUT
             NEW_MODEL=${NEW_MODEL_INPUT:-""}
@@ -522,8 +502,6 @@ elif [ "$PROVIDER" = "kimi" ]; then
     MODELS_SECTION='"models": { "provider": "kimi", "kimi": { "model": "'"${MODEL}"'" } }'
 elif [ "$PROVIDER" = "antigravity" ]; then
     MODELS_SECTION='"models": { "provider": "antigravity", "antigravity": { "model": "'"${MODEL}"'" } }'
-elif [ "$PROVIDER" = "openai-cli" ]; then
-    MODELS_SECTION='"models": { "provider": "openai-cli", "openai-cli": { "model": "'"${MODEL}"'" } }'
 else
     MODELS_SECTION='"models": { "provider": "openai", "openai": { "model": "'"${MODEL}"'" } }'
 fi
