@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { AgentConfig, TeamConfig } from './types';
-import { SCRIPT_DIR, resolveClaudeModel, resolveCodexModel, resolveOpenCodeModel } from './config';
+import { SCRIPT_DIR, resolveClaudeModel, resolveCodexModel, resolveOpenCodeModel, resolveGeminiModel, resolveKimiModel, resolveAntigravityModel } from './config';
 import { log } from './logging';
 import { ensureAgentDirectory, updateAgentTeammates } from './agent';
 
@@ -156,6 +156,69 @@ export async function invokeAgent(
         }
 
         return response || 'Sorry, I could not generate a response from OpenCode.';
+    } else if (provider === 'gemini') {
+        // Gemini CLI — uses Vertex AI / Google AI endpoints
+        const modelId = resolveGeminiModel(agent.model);
+        log('INFO', `Using Gemini CLI (agent: ${agentId}, model: ${modelId || 'default'})`);
+
+        const continueConversation = !shouldReset;
+
+        if (shouldReset) {
+            log('INFO', `🔄 Resetting Gemini conversation for agent: ${agentId}`);
+        }
+
+        const geminiArgs: string[] = [];
+        if (modelId) {
+            geminiArgs.push('--model', modelId);
+        }
+        if (continueConversation) {
+            geminiArgs.push('-c');
+        }
+        geminiArgs.push('-p', message);
+
+        return await runCommand('gemini', geminiArgs, workingDir);
+    } else if (provider === 'kimi') {
+        // Kimi CLI
+        const modelId = resolveKimiModel(agent.model);
+        log('INFO', `Using Kimi CLI (agent: ${agentId}, model: ${modelId || 'default'})`);
+
+        const continueConversation = !shouldReset;
+
+        if (shouldReset) {
+            log('INFO', `🔄 Resetting Kimi conversation for agent: ${agentId}`);
+        }
+
+        const kimiArgs: string[] = [];
+        if (modelId) {
+            kimiArgs.push('--model', modelId);
+        }
+        if (continueConversation) {
+            kimiArgs.push('-c');
+        }
+        kimiArgs.push('-p', message);
+
+        return await runCommand('kimi', kimiArgs, workingDir);
+    } else if (provider === 'antigravity') {
+        // Antigravity CLI
+        const modelId = resolveAntigravityModel(agent.model);
+        log('INFO', `Using Antigravity CLI (agent: ${agentId}, model: ${modelId || 'default'})`);
+
+        const continueConversation = !shouldReset;
+
+        if (shouldReset) {
+            log('INFO', `🔄 Resetting Antigravity conversation for agent: ${agentId}`);
+        }
+
+        const antigravityArgs = ['--dangerously-skip-permissions'];
+        if (modelId) {
+            antigravityArgs.push('--model', modelId);
+        }
+        if (continueConversation) {
+            antigravityArgs.push('-c');
+        }
+        antigravityArgs.push('-p', message);
+
+        return await runCommand('antigravity', antigravityArgs, workingDir);
     } else {
         // Default to Claude (Anthropic)
         log('INFO', `Using Claude provider (agent: ${agentId})`);

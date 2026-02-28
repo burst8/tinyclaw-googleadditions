@@ -1,7 +1,7 @@
 export interface AgentConfig {
     name: string;
-    provider: string;       // 'anthropic', 'openai', or 'opencode'
-    model: string;           // e.g. 'sonnet', 'opus', 'gpt-5.3-codex'
+    provider: string;       // 'anthropic', 'openai', 'opencode', 'gemini', 'kimi', or 'antigravity'
+    model: string;           // e.g. 'sonnet', 'opus', 'gpt-5.3-codex', or any CLI-supported model
     working_directory: string;
     system_prompt?: string;
     prompt_file?: string;
@@ -43,7 +43,7 @@ export interface Settings {
         whatsapp?: {};
     };
     models?: {
-        provider?: string; // 'anthropic', 'openai', or 'opencode'
+        provider?: string; // 'anthropic', 'openai', 'opencode', 'gemini', 'kimi', or 'antigravity'
         anthropic?: {
             model?: string;
         };
@@ -51,6 +51,15 @@ export interface Settings {
             model?: string;
         };
         opencode?: {
+            model?: string;
+        };
+        gemini?: {
+            model?: string;
+        };
+        kimi?: {
+            model?: string;
+        };
+        antigravity?: {
             model?: string;
         };
     };

@@ -4,6 +4,7 @@ import { jsonrepair } from 'jsonrepair';
 import { Settings, AgentConfig, TeamConfig, CLAUDE_MODEL_IDS, CODEX_MODEL_IDS, OPENCODE_MODEL_IDS } from './types';
 
 export const SCRIPT_DIR = path.resolve(__dirname, '../..');
+
 const _localTinyclaw = path.join(SCRIPT_DIR, '.tinyclaw');
 export const TINYCLAW_HOME = process.env.TINYCLAW_HOME
     || (fs.existsSync(path.join(_localTinyclaw, 'settings.json'))
@@ -48,6 +49,15 @@ export function getSettings(): Settings {
             } else if (settings?.models?.opencode) {
                 if (!settings.models) settings.models = {};
                 settings.models.provider = 'opencode';
+            } else if (settings?.models?.gemini) {
+                if (!settings.models) settings.models = {};
+                settings.models.provider = 'gemini';
+            } else if (settings?.models?.kimi) {
+                if (!settings.models) settings.models = {};
+                settings.models.provider = 'kimi';
+            } else if (settings?.models?.antigravity) {
+                if (!settings.models) settings.models = {};
+                settings.models.provider = 'antigravity';
             } else if (settings?.models?.anthropic) {
                 if (!settings.models) settings.models = {};
                 settings.models.provider = 'anthropic';
@@ -71,6 +81,12 @@ export function getDefaultAgentFromModels(settings: Settings): AgentConfig {
         model = settings?.models?.openai?.model || 'gpt-5.3-codex';
     } else if (provider === 'opencode') {
         model = settings?.models?.opencode?.model || 'sonnet';
+    } else if (provider === 'gemini') {
+        model = settings?.models?.gemini?.model || '';
+    } else if (provider === 'kimi') {
+        model = settings?.models?.kimi?.model || '';
+    } else if (provider === 'antigravity') {
+        model = settings?.models?.antigravity?.model || '';
     } else {
         model = settings?.models?.anthropic?.model || 'sonnet';
     }
@@ -126,4 +142,25 @@ export function resolveCodexModel(model: string): string {
  */
 export function resolveOpenCodeModel(model: string): string {
     return OPENCODE_MODEL_IDS[model] || model || '';
+}
+
+/**
+ * Resolve the model ID for Gemini CLI (passthrough — CLI handles validation).
+ */
+export function resolveGeminiModel(model: string): string {
+    return model || '';
+}
+
+/**
+ * Resolve the model ID for Kimi CLI (passthrough — CLI handles validation).
+ */
+export function resolveKimiModel(model: string): string {
+    return model || '';
+}
+
+/**
+ * Resolve the model ID for Antigravity CLI (passthrough — CLI handles validation).
+ */
+export function resolveAntigravityModel(model: string): string {
+    return model || '';
 }

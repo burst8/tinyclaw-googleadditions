@@ -150,10 +150,16 @@ agent_add() {
     echo "  1) Anthropic (Claude)"
     echo "  2) OpenAI (Codex)"
     echo "  3) OpenCode"
-    read -rp "Choose [1-3, default: 1]: " AGENT_PROVIDER_CHOICE
+    echo "  4) Gemini (Google)"
+    echo "  5) Kimi"
+    echo "  6) Antigravity"
+    read -rp "Choose [1-6, default: 1]: " AGENT_PROVIDER_CHOICE
     case "$AGENT_PROVIDER_CHOICE" in
         2) AGENT_PROVIDER="openai" ;;
         3) AGENT_PROVIDER="opencode" ;;
+        4) AGENT_PROVIDER="gemini" ;;
+        5) AGENT_PROVIDER="kimi" ;;
+        6) AGENT_PROVIDER="antigravity" ;;
         *) AGENT_PROVIDER="anthropic" ;;
     esac
 
@@ -191,7 +197,7 @@ agent_add() {
             8) read -rp "Enter model name (e.g. provider/model): " AGENT_MODEL ;;
             *) AGENT_MODEL="opencode/claude-sonnet-4-5" ;;
         esac
-    else
+    elif [ "$AGENT_PROVIDER" = "openai" ]; then
         echo "Model:"
         echo "  1) GPT-5.3 Codex"
         echo "  2) GPT-5.2"
@@ -202,6 +208,15 @@ agent_add() {
             3) read -rp "Enter model name: " AGENT_MODEL ;;
             *) AGENT_MODEL="gpt-5.3-codex" ;;
         esac
+    elif [ "$AGENT_PROVIDER" = "gemini" ]; then
+        echo -e "${YELLOW}Enter a model name (e.g. gemini-2.5-pro) or leave blank for CLI default:${NC}"
+        read -rp "Model name: " AGENT_MODEL
+    elif [ "$AGENT_PROVIDER" = "kimi" ]; then
+        echo -e "${YELLOW}Enter a model name or leave blank for CLI default:${NC}"
+        read -rp "Model name: " AGENT_MODEL
+    elif [ "$AGENT_PROVIDER" = "antigravity" ]; then
+        echo -e "${YELLOW}Enter a model name or leave blank for CLI default:${NC}"
+        read -rp "Model name: " AGENT_MODEL
     fi
 
     # Working directory - automatically set to agent directory
@@ -391,8 +406,6 @@ agent_provider() {
                     '.agents[$id].provider = "anthropic"' \
                     "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
                 echo -e "${GREEN}✓ Agent '${agent_id}' switched to Anthropic${NC}"
-                echo ""
-                echo "Use 'tinyclaw agent provider ${agent_id} anthropic --model {sonnet|opus}' to also set the model."
             fi
             ;;
         openai)
@@ -406,19 +419,58 @@ agent_provider() {
                     '.agents[$id].provider = "openai"' \
                     "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
                 echo -e "${GREEN}✓ Agent '${agent_id}' switched to OpenAI${NC}"
-                echo ""
-                echo "Use 'tinyclaw agent provider ${agent_id} openai --model {gpt-5.3-codex|gpt-5.2}' to also set the model."
+            fi
+            ;;
+        gemini)
+            if [ -n "$model_arg" ]; then
+                jq --arg id "$agent_id" --arg model "$model_arg" \
+                    '.agents[$id].provider = "gemini" | .agents[$id].model = $model' \
+                    "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}✓ Agent '${agent_id}' switched to Gemini with model: ${model_arg}${NC}"
+            else
+                jq --arg id "$agent_id" \
+                    '.agents[$id].provider = "gemini"' \
+                    "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}✓ Agent '${agent_id}' switched to Gemini${NC}"
+            fi
+            ;;
+        kimi)
+            if [ -n "$model_arg" ]; then
+                jq --arg id "$agent_id" --arg model "$model_arg" \
+                    '.agents[$id].provider = "kimi" | .agents[$id].model = $model' \
+                    "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}✓ Agent '${agent_id}' switched to Kimi with model: ${model_arg}${NC}"
+            else
+                jq --arg id "$agent_id" \
+                    '.agents[$id].provider = "kimi"' \
+                    "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}✓ Agent '${agent_id}' switched to Kimi${NC}"
+            fi
+            ;;
+        antigravity)
+            if [ -n "$model_arg" ]; then
+                jq --arg id "$agent_id" --arg model "$model_arg" \
+                    '.agents[$id].provider = "antigravity" | .agents[$id].model = $model' \
+                    "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}✓ Agent '${agent_id}' switched to Antigravity with model: ${model_arg}${NC}"
+            else
+                jq --arg id "$agent_id" \
+                    '.agents[$id].provider = "antigravity"' \
+                    "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}✓ Agent '${agent_id}' switched to Antigravity${NC}"
             fi
             ;;
         *)
-            echo "Usage: tinyclaw agent provider <agent_id> {anthropic|openai} [--model MODEL_NAME]"
+            echo "Usage: tinyclaw agent provider <agent_id> {anthropic|openai|gemini|kimi|antigravity} [--model MODEL_NAME]"
             echo ""
             echo "Examples:"
             echo "  tinyclaw agent provider coder                                    # Show current provider/model"
             echo "  tinyclaw agent provider coder anthropic                           # Switch to Anthropic"
             echo "  tinyclaw agent provider coder openai                              # Switch to OpenAI"
-            echo "  tinyclaw agent provider coder anthropic --model opus              # Switch to Anthropic Opus"
-            echo "  tinyclaw agent provider coder openai --model gpt-5.3-codex        # Switch to OpenAI GPT-5.3 Codex"
+            echo "  tinyclaw agent provider coder gemini                              # Switch to Gemini"
+            echo "  tinyclaw agent provider coder kimi                                # Switch to Kimi"
+            echo "  tinyclaw agent provider coder antigravity                         # Switch to Antigravity"
+            echo "  tinyclaw agent provider coder gemini --model gemini-2.5-pro        # Switch to Gemini with model"
             exit 1
             ;;
     esac
