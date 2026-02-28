@@ -312,11 +312,14 @@ if [[ "$SETUP_AGENTS" =~ ^[yY] ]]; then
         read -rp "  Display name: " NEW_AGENT_NAME
         [ -z "$NEW_AGENT_NAME" ] && NEW_AGENT_NAME="$NEW_AGENT_ID"
 
-        echo "  Provider: 1) Anthropic  2) OpenAI  3) OpenCode"
-        read -rp "  Choose [1-3, default: 1]: " NEW_PROVIDER_CHOICE
+        echo "  Provider: 1) Anthropic  2) OpenAI  3) OpenCode  4) Gemini  5) Kimi  6) Antigravity"
+        read -rp "  Choose [1-6, default: 1]: " NEW_PROVIDER_CHOICE
         case "$NEW_PROVIDER_CHOICE" in
             2) NEW_PROVIDER="openai" ;;
             3) NEW_PROVIDER="opencode" ;;
+            4) NEW_PROVIDER="gemini" ;;
+            5) NEW_PROVIDER="kimi" ;;
+            6) NEW_PROVIDER="antigravity" ;;
             *) NEW_PROVIDER="anthropic" ;;
         esac
 
@@ -338,6 +341,18 @@ if [[ "$SETUP_AGENTS" =~ ^[yY] ]]; then
                 5) read -rp "  Enter model name (e.g. provider/model): " NEW_MODEL ;;
                 *) NEW_MODEL="opencode/claude-sonnet-4-5" ;;
             esac
+        elif [ "$NEW_PROVIDER" = "gemini" ]; then
+            echo -e "  ${YELLOW}Enter a model name (e.g. gemini-2.5-pro) or leave blank for CLI default:${NC}"
+            read -rp "  Model name: " NEW_MODEL_INPUT
+            NEW_MODEL=${NEW_MODEL_INPUT:-""}
+        elif [ "$NEW_PROVIDER" = "kimi" ]; then
+            echo -e "  ${YELLOW}Enter a model name or leave blank for CLI default:${NC}"
+            read -rp "  Model name: " NEW_MODEL_INPUT
+            NEW_MODEL=${NEW_MODEL_INPUT:-""}
+        elif [ "$NEW_PROVIDER" = "antigravity" ]; then
+            echo -e "  ${YELLOW}Enter a model name or leave blank for CLI default:${NC}"
+            read -rp "  Model name: " NEW_MODEL_INPUT
+            NEW_MODEL=${NEW_MODEL_INPUT:-""}
         else
             echo "  Model: 1) GPT-5.3 Codex  2) GPT-5.2  3) Custom"
             read -rp "  Choose [1-3, default: 1]: " NEW_MODEL_CHOICE
