@@ -164,3 +164,26 @@ export function resolveKimiModel(model: string): string {
 export function resolveAntigravityModel(model: string): string {
     return model || '';
 }
+
+/**
+ * Build environment variables for a provider's stored auth credentials.
+ * Returns an object like { ANTHROPIC_API_KEY: 'sk-...' } if an API key
+ * is stored, or an empty object if the provider uses OAuth / has no key.
+ */
+export function getAuthEnv(provider: string): Record<string, string> {
+    const settings = getSettings();
+    const entry = settings.auth?.[provider];
+    if (!entry?.apiKey) return {};
+
+    const ENV_MAP: Record<string, string> = {
+        anthropic: 'ANTHROPIC_API_KEY',
+        openai: 'OPENAI_API_KEY',
+        opencode: 'ANTHROPIC_API_KEY',
+        gemini: 'GOOGLE_API_KEY',
+        kimi: 'MOONSHOT_API_KEY',
+        antigravity: 'GOOGLE_API_KEY',
+    };
+
+    const varName = ENV_MAP[provider];
+    return varName ? { [varName]: entry.apiKey } : {};
+}

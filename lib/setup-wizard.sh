@@ -11,6 +11,70 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# ── sign_in_provider function ────────────────────────────────────────────────
+# Signs into a single CLI provider via OAuth or API key.
+# Appends to the global AUTH_JSON variable.
+sign_in_provider() {
+    local prov="$1"
+    echo ""
+    echo -e "${YELLOW}── Signing in to $prov ──${NC}"
+
+    echo "  1) OAuth / Browser login"
+    echo "  2) API Key"
+    read -rp "  Auth method [1/2, default: 1]: " AUTH_METHOD
+    AUTH_METHOD=${AUTH_METHOD:-1}
+
+    if [ "$AUTH_METHOD" = "1" ]; then
+        # OAuth — run the CLI's login command
+        case "$prov" in
+            anthropic)
+                echo -e "  ${YELLOW}Running: claude auth login${NC}"
+                claude auth login
+                ;;
+            gemini)
+                echo -e "  ${YELLOW}Running: gemini auth login${NC}"
+                gemini auth login
+                ;;
+            kimi)
+                echo -e "  ${YELLOW}Running: kimi /login${NC}"
+                kimi /login
+                ;;
+            antigravity)
+                echo -e "  ${YELLOW}Running: antigravity auth login${NC}"
+                antigravity auth login
+                ;;
+            *)
+                echo -e "  ${RED}OAuth not available for $prov — falling back to API key${NC}"
+                AUTH_METHOD="2"
+                ;;
+        esac
+        if [ "$AUTH_METHOD" = "1" ]; then
+            AUTH_JSON="$AUTH_JSON \"$prov\": { \"method\": \"oauth\", \"authenticated\": true },"
+            echo -e "  ${GREEN}✓ $prov signed in via OAuth${NC}"
+            return
+        fi
+    fi
+
+    # API Key path
+    local env_hint=""
+    case "$prov" in
+        anthropic|opencode) env_hint="ANTHROPIC_API_KEY" ;;
+        openai)             env_hint="OPENAI_API_KEY" ;;
+        gemini|antigravity) env_hint="GOOGLE_API_KEY" ;;
+        kimi)               env_hint="MOONSHOT_API_KEY" ;;
+    esac
+
+    read -rp "  Enter $env_hint: " API_KEY_VALUE
+    if [ -n "$API_KEY_VALUE" ]; then
+        AUTH_JSON="$AUTH_JSON \"$prov\": { \"method\": \"apikey\", \"apiKey\": \"$API_KEY_VALUE\" },"
+        echo -e "  ${GREEN}✓ $prov API key saved${NC}"
+    else
+        echo -e "  ${RED}✗ Skipped $prov (no key provided)${NC}"
+    fi
+}
+
+AUTH_JSON=""  # global accumulator for auth entries
+
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  TinyClaw - Setup Wizard${NC}"
@@ -270,6 +334,38 @@ DEFAULT_AGENT_NAME=$(echo "$DEFAULT_AGENT_NAME" | tr ' ' '-' | tr -cd 'a-zA-Z0-9
 echo -e "${GREEN}✓ Default agent: $DEFAULT_AGENT_NAME${NC}"
 echo ""
 
+# ── CLI Sign-In Queue ────────────────────────────────────────────────────────
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}  CLI Authentication${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo "Select providers to sign into now (OAuth or API key):"
+echo "  1) Anthropic (Claude)    4) Gemini (Google)"
+echo "  2) OpenAI                5) Kimi"
+echo "  3) OpenCode              6) Antigravity"
+echo ""
+echo -e "${YELLOW}Enter numbers separated by spaces (e.g. '1 4 5'), or 'none' to skip:${NC}"
+read -rp "Sign in to: " SIGNIN_CHOICES
+
+if [ "$SIGNIN_CHOICES" != "none" ] && [ -n "$SIGNIN_CHOICES" ]; then
+    for choice in $SIGNIN_CHOICES; do
+        case "$choice" in
+            1) sign_in_provider "anthropic" ;;
+            2) sign_in_provider "openai" ;;
+            3) sign_in_provider "opencode" ;;
+            4) sign_in_provider "gemini" ;;
+            5) sign_in_provider "kimi" ;;
+            6) sign_in_provider "antigravity" ;;
+            *) echo -e "  ${RED}Unknown option: $choice — skipping${NC}" ;;
+        esac
+    done
+    echo ""
+    echo -e "${GREEN}✓ CLI authentication complete${NC}"
+else
+    echo -e "${YELLOW}Skipping CLI sign-in${NC}"
+fi
+echo ""
+
 # --- Additional Agents (optional) ---
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  Additional Agents (Optional)${NC}"
@@ -406,6 +502,14 @@ else
     MODELS_SECTION='"models": { "provider": "openai", "openai": { "model": "'"${MODEL}"'" } }'
 fi
 
+# Build auth section from accumulated sign-in data
+AUTH_SECTION=""
+if [ -n "$AUTH_JSON" ]; then
+    # Strip trailing comma
+    AUTH_JSON="${AUTH_JSON%,}"
+    AUTH_SECTION="\"auth\": { $AUTH_JSON },"
+fi
+
 cat > "$SETTINGS_FILE" <<EOF
 {
   "workspace": {
@@ -424,6 +528,7 @@ cat > "$SETTINGS_FILE" <<EOF
   },
   ${AGENTS_JSON}
   ${MODELS_SECTION},
+  ${AUTH_SECTION}
   "monitoring": {
     "heartbeat_interval": ${HEARTBEAT_INTERVAL}
   }

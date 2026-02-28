@@ -548,3 +548,87 @@ agent_reset_multiple() {
         exit 1
     fi
 }
+
+# Authenticate (or re-authenticate) a single CLI provider
+agent_auth() {
+    local provider="$1"
+
+    if [ -z "$provider" ]; then
+        echo "Usage: tinyclaw auth <provider>"
+        echo ""
+        echo "Providers: anthropic, openai, opencode, gemini, kimi, antigravity"
+        echo ""
+        echo "Examples:"
+        echo "  tinyclaw auth anthropic       # Sign in to Anthropic (Claude)"
+        echo "  tinyclaw auth gemini           # Sign in to Gemini (Google)"
+        echo "  tinyclaw auth kimi             # Sign in to Kimi"
+        return 1
+    fi
+
+    if [ ! -f "$SETTINGS_FILE" ]; then
+        echo -e "${RED}No settings file found. Run setup first.${NC}"
+        exit 1
+    fi
+
+    echo ""
+    echo -e "${YELLOW}── Signing in to $provider ──${NC}"
+
+    echo "  1) OAuth / Browser login"
+    echo "  2) API Key"
+    read -rp "  Auth method [1/2, default: 1]: " AUTH_METHOD
+    AUTH_METHOD=${AUTH_METHOD:-1}
+
+    if [ "$AUTH_METHOD" = "1" ]; then
+        case "$provider" in
+            anthropic)
+                echo -e "  ${YELLOW}Running: claude auth login${NC}"
+                claude auth login
+                ;;
+            gemini)
+                echo -e "  ${YELLOW}Running: gemini auth login${NC}"
+                gemini auth login
+                ;;
+            kimi)
+                echo -e "  ${YELLOW}Running: kimi /login${NC}"
+                kimi /login
+                ;;
+            antigravity)
+                echo -e "  ${YELLOW}Running: antigravity auth login${NC}"
+                antigravity auth login
+                ;;
+            *)
+                echo -e "  ${RED}OAuth not available for $provider — falling back to API key${NC}"
+                AUTH_METHOD="2"
+                ;;
+        esac
+        if [ "$AUTH_METHOD" = "1" ]; then
+            # Update settings.json auth section via jq
+            local tmp_file="$SETTINGS_FILE.tmp"
+            jq --arg p "$provider" \
+                '.auth[$p] = { "method": "oauth", "authenticated": true }' \
+                "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+            echo -e "  ${GREEN}✓ $provider signed in via OAuth${NC}"
+            return
+        fi
+    fi
+
+    # API Key path
+    local env_hint=""
+    case "$provider" in
+        anthropic|opencode) env_hint="ANTHROPIC_API_KEY" ;;
+        openai)             env_hint="OPENAI_API_KEY" ;;
+        gemini|antigravity) env_hint="GOOGLE_API_KEY" ;;
+        kimi)               env_hint="MOONSHOT_API_KEY" ;;
+    esac
+
+    read -rp "  Enter $env_hint: " API_KEY_VALUE
+    if [ -n "$API_KEY_VALUE" ]; then
+        local tmp_file="$SETTINGS_FILE.tmp"
+        jq --arg p "$provider" --arg k "$API_KEY_VALUE" \
+            '.auth[$p] = { "method": "apikey", "apiKey": $k }' \
+            "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+        echo -e "  ${GREEN}✓ $provider API key saved${NC}"
+    else
+        echo -e "  ${RED}✗ Skipped $provider (no key provided)${NC}"
+    fi
+}

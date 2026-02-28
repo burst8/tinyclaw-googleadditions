@@ -2,13 +2,13 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { AgentConfig, TeamConfig } from './types';
-import { SCRIPT_DIR, resolveClaudeModel, resolveCodexModel, resolveOpenCodeModel, resolveGeminiModel, resolveKimiModel, resolveAntigravityModel } from './config';
+import { SCRIPT_DIR, resolveClaudeModel, resolveCodexModel, resolveOpenCodeModel, resolveGeminiModel, resolveKimiModel, resolveAntigravityModel, getAuthEnv } from './config';
 import { log } from './logging';
 import { ensureAgentDirectory, updateAgentTeammates } from './agent';
 
-export async function runCommand(command: string, args: string[], cwd?: string): Promise<string> {
+export async function runCommand(command: string, args: string[], cwd?: string, extraEnv?: Record<string, string>): Promise<string> {
     return new Promise((resolve, reject) => {
-        const env = { ...process.env };
+        const env = { ...process.env, ...extraEnv };
         delete env.CLAUDECODE;
 
         const child = spawn(command, args, {
@@ -99,7 +99,7 @@ export async function invokeAgent(
         }
         codexArgs.push('--skip-git-repo-check', '--dangerously-bypass-approvals-and-sandbox', '--json', message);
 
-        const codexOutput = await runCommand('codex', codexArgs, workingDir);
+        const codexOutput = await runCommand('codex', codexArgs, workingDir, getAuthEnv('openai'));
 
         // Parse JSONL output and extract final agent_message
         let response = '';
@@ -139,7 +139,7 @@ export async function invokeAgent(
         }
         opencodeArgs.push(message);
 
-        const opencodeOutput = await runCommand('opencode', opencodeArgs, workingDir);
+        const opencodeOutput = await runCommand('opencode', opencodeArgs, workingDir, getAuthEnv('opencode'));
 
         // Parse JSONL output and collect all text parts
         let response = '';
@@ -176,7 +176,7 @@ export async function invokeAgent(
         }
         geminiArgs.push('-p', message);
 
-        return await runCommand('gemini', geminiArgs, workingDir);
+        return await runCommand('gemini', geminiArgs, workingDir, getAuthEnv('gemini'));
     } else if (provider === 'kimi') {
         // Kimi CLI
         const modelId = resolveKimiModel(agent.model);
@@ -197,7 +197,7 @@ export async function invokeAgent(
         }
         kimiArgs.push('-p', message);
 
-        return await runCommand('kimi', kimiArgs, workingDir);
+        return await runCommand('kimi', kimiArgs, workingDir, getAuthEnv('kimi'));
     } else if (provider === 'antigravity') {
         // Antigravity CLI
         const modelId = resolveAntigravityModel(agent.model);
@@ -218,7 +218,7 @@ export async function invokeAgent(
         }
         antigravityArgs.push('-p', message);
 
-        return await runCommand('antigravity', antigravityArgs, workingDir);
+        return await runCommand('antigravity', antigravityArgs, workingDir, getAuthEnv('antigravity'));
     } else {
         // Default to Claude (Anthropic)
         log('INFO', `Using Claude provider (agent: ${agentId})`);
@@ -239,6 +239,6 @@ export async function invokeAgent(
         }
         claudeArgs.push('-p', message);
 
-        return await runCommand('claude', claudeArgs, workingDir);
+        return await runCommand('claude', claudeArgs, workingDir, getAuthEnv('anthropic'));
     }
 }

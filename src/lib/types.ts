@@ -65,6 +65,13 @@ export interface Settings {
     };
     agents?: Record<string, AgentConfig>;
     teams?: Record<string, TeamConfig>;
+    auth?: {
+        [provider: string]: {
+            method: 'oauth' | 'apikey';
+            apiKey?: string;
+            authenticated?: boolean;
+        };
+    };
     monitoring?: {
         heartbeat_interval?: number;
     };
