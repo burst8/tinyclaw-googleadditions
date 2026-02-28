@@ -598,6 +598,10 @@ agent_auth() {
                 echo -e "  ${YELLOW}Running: claude auth login${NC}"
                 claude auth login
                 ;;
+            openai)
+                echo -e "  ${YELLOW}Running: codex login${NC}"
+                codex login
+                ;;
             gemini)
                 echo -e "  ${YELLOW}Running: gemini auth login${NC}"
                 gemini auth login
