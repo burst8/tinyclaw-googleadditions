@@ -460,13 +460,27 @@ agent_provider() {
                 echo -e "${GREEN}✓ Agent '${agent_id}' switched to Antigravity${NC}"
             fi
             ;;
+        openai-cli)
+            if [ -n "$model_arg" ]; then
+                jq --arg id "$agent_id" --arg model "$model_arg" \
+                    '.agents[$id].provider = "openai-cli" | .agents[$id].model = $model' \
+                    "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}✓ Agent '${agent_id}' switched to OpenAI CLI with model: ${model_arg}${NC}"
+            else
+                jq --arg id "$agent_id" \
+                    '.agents[$id].provider = "openai-cli"' \
+                    "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}✓ Agent '${agent_id}' switched to OpenAI CLI${NC}"
+            fi
+            ;;
         *)
-            echo "Usage: tinyclaw agent provider <agent_id> {anthropic|openai|gemini|kimi|antigravity} [--model MODEL_NAME]"
+            echo "Usage: tinyclaw agent provider <agent_id> {anthropic|openai|openai-cli|gemini|kimi|antigravity} [--model MODEL_NAME]"
             echo ""
             echo "Examples:"
             echo "  tinyclaw agent provider coder                                    # Show current provider/model"
             echo "  tinyclaw agent provider coder anthropic                           # Switch to Anthropic"
             echo "  tinyclaw agent provider coder openai                              # Switch to OpenAI"
+            echo "  tinyclaw agent provider coder openai-cli                          # Switch to OpenAI CLI"
             echo "  tinyclaw agent provider coder gemini                              # Switch to Gemini"
             echo "  tinyclaw agent provider coder kimi                                # Switch to Kimi"
             echo "  tinyclaw agent provider coder antigravity                         # Switch to Antigravity"
@@ -556,7 +570,7 @@ agent_auth() {
     if [ -z "$provider" ]; then
         echo "Usage: tinyclaw auth <provider>"
         echo ""
-        echo "Providers: anthropic, openai, opencode, gemini, kimi, antigravity"
+        echo "Providers: anthropic, openai, openai-cli, opencode, gemini, kimi, antigravity"
         echo ""
         echo "Examples:"
         echo "  tinyclaw auth anthropic       # Sign in to Anthropic (Claude)"
@@ -616,7 +630,7 @@ agent_auth() {
     local env_hint=""
     case "$provider" in
         anthropic|opencode) env_hint="ANTHROPIC_API_KEY" ;;
-        openai)             env_hint="OPENAI_API_KEY" ;;
+        openai|openai-cli)  env_hint="OPENAI_API_KEY" ;;
         gemini|antigravity) env_hint="GOOGLE_API_KEY" ;;
         kimi)               env_hint="MOONSHOT_API_KEY" ;;
     esac

@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { AgentConfig, TeamConfig } from './types';
-import { SCRIPT_DIR, resolveClaudeModel, resolveCodexModel, resolveOpenCodeModel, resolveGeminiModel, resolveKimiModel, resolveAntigravityModel, getAuthEnv } from './config';
+import { SCRIPT_DIR, resolveClaudeModel, resolveCodexModel, resolveOpenAICliModel, resolveOpenCodeModel, resolveGeminiModel, resolveKimiModel, resolveAntigravityModel, getAuthEnv } from './config';
 import { log } from './logging';
 import { ensureAgentDirectory, updateAgentTeammates } from './agent';
 
@@ -116,6 +116,27 @@ export async function invokeAgent(
         }
 
         return response || 'Sorry, I could not generate a response from Codex.';
+    } else if (provider === 'openai-cli') {
+        // OpenAI CLI — standard provider
+        const modelId = resolveOpenAICliModel(agent.model);
+        log('INFO', `Using OpenAI CLI (agent: ${agentId}, model: ${modelId || 'default'})`);
+
+        const continueConversation = !shouldReset;
+
+        if (shouldReset) {
+            log('INFO', `🔄 Resetting OpenAI CLI conversation for agent: ${agentId}`);
+        }
+
+        const openaiArgs: string[] = [];
+        if (modelId) {
+            openaiArgs.push('--model', modelId);
+        }
+        if (continueConversation) {
+            openaiArgs.push('-c');
+        }
+        openaiArgs.push('-p', message);
+
+        return await runCommand('openai', openaiArgs, workingDir, getAuthEnv('openai-cli'));
     } else if (provider === 'opencode') {
         // OpenCode CLI — non-interactive mode via `opencode run`.
         // Outputs JSONL with --format json; extract "text" type events for the response.
