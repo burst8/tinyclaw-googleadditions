@@ -28,7 +28,8 @@
 - ✅ **Multi-channel** - Discord, WhatsApp, and Telegram
 - ✅ **Web portal (TinyOffice)** - Browser-based dashboard for chat, agents, teams, tasks, logs, and settings
 - ✅ **Team Observation** - You can observe agent teams conversations via `tinyclaw team visualize`
-- ✅ **Multiple AI providers** - Anthropic Claude and OpenAI Codex using existing subscriptions without breaking ToS
+- ✅ **Multiple AI providers** - Anthropic Claude, OpenAI Codex, OpenCode, Gemini, Kimi, and Antigravity
+- ✅ **CLI authentication queue** - OAuth and API key sign-in during setup with `tinyclaw auth` for re-authentication
 - ✅ **Parallel processing** - Agents process messages concurrently
 - ✅ **Live TUI dashboard** - Real-time team visualizer for monitoring agent chains
 - ✅ **Persistent sessions** - Conversation context maintained across restarts
@@ -51,6 +52,10 @@ We are actively looking for contributors. Please reach out.
 - Bash 4.0+ (macOS: `brew install bash`)
 - [Claude Code CLI](https://claude.com/claude-code) (for Anthropic provider)
 - [Codex CLI](https://docs.openai.com/codex) (for OpenAI provider)
+- [OpenCode CLI](https://github.com/opencode-ai/opencode) (for OpenCode provider) *(optional)*
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) (for Gemini provider) *(optional)*
+- [Kimi CLI](https://github.com/nicepkg/kimi) (for Kimi provider) *(optional)*
+- [Antigravity CLI](https://github.com/anthropics/antigravity) (for Antigravity provider) *(optional)*
 
 ### Installation
 
@@ -85,11 +90,13 @@ The setup wizard will guide you through:
 
 1. **Channel selection** - Choose Discord, WhatsApp, and/or Telegram
 2. **Bot tokens** - Enter tokens for enabled channels
-3. **Workspace setup** - Name your workspace directory
-4. **Default agent** - Configure your main AI assistant
-5. **AI provider** - Select Anthropic (Claude) or OpenAI
-6. **Model selection** - Choose model (e.g., Sonnet, Opus, GPT-5.3)
-7. **Heartbeat interval** - Set proactive check-in frequency
+3. **AI provider** - Select from 6 providers (Anthropic, OpenAI, OpenCode, Gemini, Kimi, Antigravity)
+4. **Model selection** - Choose model (e.g., Sonnet, Opus, GPT-5.3, gemini-2.5-pro)
+5. **Heartbeat interval** - Set proactive check-in frequency
+6. **Workspace setup** - Name your workspace directory
+7. **Default agent** - Configure your main AI assistant
+8. **CLI authentication** - Sign into selected providers via OAuth or API key
+9. **Additional agents** - Optionally add more agents with different providers/models
 
 <details>
 <summary><b>📱 Channel Setup Guides</b></summary>
@@ -190,6 +197,7 @@ Commands work with `tinyclaw` (if CLI installed) or `./tinyclaw.sh` (direct scri
 | `agent reset <id>`                   | Reset agent conversation         | `tinyclaw agent reset coder`                     |
 | `agent provider <id> [provider]`     | Show or set agent's AI provider  | `tinyclaw agent provider coder anthropic`        |
 | `agent provider <id> <p> --model <m>`| Set agent's provider and model   | `tinyclaw agent provider coder openai --model gpt-5.3-codex` |
+| `auth <provider>`                    | Sign in or re-authenticate a CLI | `tinyclaw auth openai`                           |
 
 ### Team Commands
 
@@ -208,6 +216,7 @@ Commands work with `tinyclaw` (if CLI installed) or `./tinyclaw.sh` (direct scri
 | `provider [name]`                 | Show or switch AI provider   | `tinyclaw provider anthropic`                    |
 | `provider <name> --model <model>` | Switch provider and model    | `tinyclaw provider openai --model gpt-5.3-codex` |
 | `model [name]`                    | Show or switch AI model      | `tinyclaw model opus`                            |
+| `auth <provider>`                 | Re-authenticate a CLI        | `tinyclaw auth gemini`                           |
 | `reset`                           | Reset all conversations      | `tinyclaw reset`                                 |
 | `channels reset <channel>`        | Reset channel authentication | `tinyclaw channels reset whatsapp`               |
 
@@ -477,6 +486,10 @@ Located at `.tinyclaw/settings.json`:
       "leader_agent": "coder"
     }
   },
+  "auth": {
+    "anthropic": { "method": "oauth", "authenticated": true },
+    "openai": { "method": "apikey", "apiKey": "sk-..." }
+  },
   "monitoring": {
     "heartbeat_interval": 3600
   }
@@ -588,7 +601,7 @@ tinyclaw logs all
 ## 🙏 Credits
 
 - Inspired by [OpenClaw](https://openclaw.ai/) by Peter Steinberger
-- Built on [Claude Code](https://claude.com/claude-code) and [Codex CLI](https://docs.openai.com/codex)
+- Built on [Claude Code](https://claude.com/claude-code), [Codex CLI](https://docs.openai.com/codex), [OpenCode](https://github.com/opencode-ai/opencode), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Kimi](https://github.com/nicepkg/kimi), and [Antigravity](https://github.com/anthropics/antigravity)
 - Uses [discord.js](https://discord.js.org/), [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js), [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-api)
 
 ## 📄 License
