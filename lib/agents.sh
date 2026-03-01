@@ -581,24 +581,16 @@ agent_auth() {
     if [ "$AUTH_METHOD" = "1" ]; then
         case "$provider" in
             anthropic)
-                echo -e "  ${YELLOW}Running: claude auth login${NC}"
-                claude auth login
+                echo -e "  ${YELLOW}Running: claude login${NC}"
+                claude login
                 ;;
             openai)
                 echo -e "  ${YELLOW}Running: codex login${NC}"
                 codex login
                 ;;
-            gemini)
-                echo -e "  ${YELLOW}Running: gemini auth login${NC}"
-                gemini auth login
-                ;;
             kimi)
-                echo -e "  ${YELLOW}Running: kimi /login${NC}"
-                kimi /login
-                ;;
-            antigravity)
-                echo -e "  ${YELLOW}Running: antigravity auth login${NC}"
-                antigravity auth login
+                echo -e "  ${YELLOW}Running: kimi login${NC}"
+                kimi login
                 ;;
             *)
                 echo -e "  ${RED}OAuth not available for $provider — falling back to API key${NC}"

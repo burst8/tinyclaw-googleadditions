@@ -28,24 +28,16 @@ sign_in_provider() {
         # OAuth — run the CLI's login command
         case "$prov" in
             anthropic)
-                echo -e "  ${YELLOW}Running: claude auth login${NC}"
-                claude auth login
+                echo -e "  ${YELLOW}Running: claude login${NC}"
+                claude login
                 ;;
             openai)
                 echo -e "  ${YELLOW}Running: codex login${NC}"
                 codex login
                 ;;
-            gemini)
-                echo -e "  ${YELLOW}Running: gemini auth login${NC}"
-                gemini auth login
-                ;;
             kimi)
-                echo -e "  ${YELLOW}Running: kimi /login${NC}"
-                kimi /login
-                ;;
-            antigravity)
-                echo -e "  ${YELLOW}Running: antigravity auth login${NC}"
-                antigravity auth login
+                echo -e "  ${YELLOW}Running: kimi login${NC}"
+                kimi login
                 ;;
             *)
                 echo -e "  ${RED}OAuth not available for $prov — falling back to API key${NC}"
