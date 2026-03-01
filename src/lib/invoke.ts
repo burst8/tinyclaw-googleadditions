@@ -3,8 +3,23 @@ import fs from 'fs';
 import path from 'path';
 import { AgentConfig, TeamConfig } from './types';
 import { SCRIPT_DIR, resolveClaudeModel, resolveCodexModel, resolveOpenCodeModel, resolveGeminiModel, resolveKimiModel, resolveAntigravityModel, getAuthEnv } from './config';
+import { getAuthEnvFromProfiles } from './auth-profiles';
 import { log } from './logging';
 import { ensureAgentDirectory, updateAgentTeammates } from './agent';
+
+/**
+ * Resolve auth env vars for a provider. Checks auth-profiles.json first
+ * (the new OpenClaw-style store), then falls back to settings.json auth entries.
+ */
+function resolveAuthEnv(provider: string): Record<string, string> {
+    // Try new auth profile store first
+    const profileEnv = getAuthEnvFromProfiles(provider);
+    if (Object.keys(profileEnv).length > 0) {
+        return profileEnv;
+    }
+    // Fall back to legacy settings.json auth
+    return getAuthEnv(provider);
+}
 
 export async function runCommand(command: string, args: string[], cwd?: string, extraEnv?: Record<string, string>): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -99,7 +114,7 @@ export async function invokeAgent(
         }
         codexArgs.push('--skip-git-repo-check', '--dangerously-bypass-approvals-and-sandbox', '--json', message);
 
-        const codexOutput = await runCommand('codex', codexArgs, workingDir, getAuthEnv('openai'));
+        const codexOutput = await runCommand('codex', codexArgs, workingDir, resolveAuthEnv('openai'));
 
         // Parse JSONL output and extract final agent_message
         let response = '';
@@ -139,7 +154,7 @@ export async function invokeAgent(
         }
         opencodeArgs.push(message);
 
-        const opencodeOutput = await runCommand('opencode', opencodeArgs, workingDir, getAuthEnv('opencode'));
+        const opencodeOutput = await runCommand('opencode', opencodeArgs, workingDir, resolveAuthEnv('opencode'));
 
         // Parse JSONL output and collect all text parts
         let response = '';
@@ -176,7 +191,7 @@ export async function invokeAgent(
         }
         geminiArgs.push('-p', message);
 
-        return await runCommand('gemini', geminiArgs, workingDir, getAuthEnv('gemini'));
+        return await runCommand('gemini', geminiArgs, workingDir, resolveAuthEnv('gemini'));
     } else if (provider === 'kimi') {
         // Kimi CLI
         const modelId = resolveKimiModel(agent.model);
@@ -197,7 +212,7 @@ export async function invokeAgent(
         }
         kimiArgs.push('-p', message);
 
-        return await runCommand('kimi', kimiArgs, workingDir, getAuthEnv('kimi'));
+        return await runCommand('kimi', kimiArgs, workingDir, resolveAuthEnv('kimi'));
     } else if (provider === 'antigravity') {
         // Antigravity CLI
         const modelId = resolveAntigravityModel(agent.model);
@@ -218,7 +233,7 @@ export async function invokeAgent(
         }
         antigravityArgs.push('-p', message);
 
-        return await runCommand('antigravity', antigravityArgs, workingDir, getAuthEnv('antigravity'));
+        return await runCommand('antigravity', antigravityArgs, workingDir, resolveAuthEnv('antigravity'));
     } else {
         // Default to Claude (Anthropic)
         log('INFO', `Using Claude provider (agent: ${agentId})`);
@@ -239,6 +254,6 @@ export async function invokeAgent(
         }
         claudeArgs.push('-p', message);
 
-        return await runCommand('claude', claudeArgs, workingDir, getAuthEnv('anthropic'));
+        return await runCommand('claude', claudeArgs, workingDir, resolveAuthEnv('anthropic'));
     }
 }
