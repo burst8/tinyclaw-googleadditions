@@ -35,6 +35,10 @@ sign_in_provider() {
                 echo -e "  ${YELLOW}Running: codex login${NC}"
                 codex login
                 ;;
+            gemini)
+                echo -e "  ${YELLOW}Running: gcloud auth application-default login (Vertex AI)${NC}"
+                gcloud auth application-default login
+                ;;
             kimi)
                 echo -e "  ${YELLOW}Running: kimi login${NC}"
                 kimi login
